@@ -1,0 +1,9 @@
+[
+  { "id": "1", "name": "M-101 Hydraulic Press 250T", "lineId": "1" },
+  { "id": "2", "name": "M-102 Ultrasonic Welder", "lineId": "1" },
+  { "id": "3", "name": "M-103 Auto Screwdriver Unit", "lineId": "2" },
+  { "id": "4", "name": "M-104 Conveyor System Alpha", "lineId": "2" },
+  { "id": "5", "name": "M-105 SMT Pick & Place", "lineId": "3" },
+  { "id": "6", "name": "M-106 Laser Marking Unit", "lineId": "3" },
+  { "id": "7", "name": "M-107 Vision Inspection Cam", "lineId": "4" }
+]

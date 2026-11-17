@@ -1,0 +1,8 @@
+[
+  { "id": "1", "name": "Line 1 - Main Assy", "subDepartmentId": "1" },
+  { "id": "2", "name": "Line 2 - Door Trim Assy", "subDepartmentId": "1" },
+  { "id": "3", "name": "Line 3 - Electronics & Switches", "subDepartmentId": "2" },
+  { "id": "4", "name": "Line 4 - Sub Assy Cell", "subDepartmentId": "2" },
+  { "id": "5", "name": "Line 5 - Robot Cell 1", "subDepartmentId": "3" },
+  { "id": "6", "name": "Line 6 - Auto Assembly", "subDepartmentId": "3" }
+]

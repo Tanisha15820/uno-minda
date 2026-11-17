@@ -1,0 +1,5 @@
+[
+  { "id": "1", "name": "Pune Plant 1 (Chakan)", "code": "PUN-01", "location": "Chakan MIDC Phase II, Pune" },
+  { "id": "2", "name": "Pune Plant 2 (Talegaon)", "code": "PUN-02", "location": "Talegaon Industrial Area, Pune" },
+  { "id": "3", "name": "Pune Plant 3 (Ranjangaon)", "code": "PUN-03", "location": "Ranjangaon MIDC, Pune" }
+]

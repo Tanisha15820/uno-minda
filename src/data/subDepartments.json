@@ -1,0 +1,11 @@
+[
+  { "id": "1", "name": "Line Assembly A", "departmentId": "1" },
+  { "id": "2", "name": "Line Assembly B", "departmentId": "1" },
+  { "id": "3", "name": "Injection Molding", "departmentId": "2" },
+  { "id": "4", "name": "Blow Molding", "departmentId": "2" },
+  { "id": "5", "name": "Stamping Unit", "departmentId": "3" },
+  { "id": "6", "name": "Automated Spray Cell", "departmentId": "4" },
+  { "id": "7", "name": "Incoming Quality", "departmentId": "5" },
+  { "id": "8", "name": "End of Line Testing", "departmentId": "5" },
+  { "id": "9", "name": "Tool Room & D&D", "departmentId": "6" }
+]

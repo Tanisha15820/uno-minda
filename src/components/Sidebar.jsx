@@ -1,0 +1,352 @@
+import { useEffect, useMemo } from "react";
+import logo from "../assets/images/unominda_logo.png";
+import { ChevronsLeft, ChevronsRight, LayoutGrid, LogOut, Sparkles } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import AuthApi from "../features/auth/services/AuthApi";
+import { clearSession } from "../features/auth/utils/authStorage";
+
+const Sidebar = ({
+  mobileOpen,
+  setMobileOpen,
+  collapsed,
+  setCollapsed,
+  activeMenu,
+  setActiveMenu,
+  menuItems = [],
+}) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = async () => {
+    try {
+      await AuthApi.logout();
+    } catch {
+      // Always clear the local session, even if the server call fails
+    } finally {
+      clearSession();
+      navigate("/");
+    }
+  };
+
+  // Desktop = Open
+  // Mobile = Collapsed
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setCollapsed(true);
+      } else {
+        setCollapsed(false);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    // Update when screen size changes
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [setCollapsed]);
+
+  const currentPath = location.pathname.replace(/\/+$/, "") || "/";
+
+  // Determine the single active menu item dynamically
+  const activeItemName = useMemo(() => {
+    // 1. Root /lms route defaults to the 1st menu item (Overview)
+    if (currentPath === "/lms") {
+      const overviewItem = menuItems.find(
+        (item) => item.name === "Overview" || item.path === "/lms/dashboard"
+      );
+      if (overviewItem) return overviewItem.name;
+    }
+
+    // 2. Exact match on path
+    const exactMatch = menuItems.find(
+      (item) => item.path && item.path.replace(/\/+$/, "") === currentPath
+    );
+    if (exactMatch) return exactMatch.name;
+
+    // 3. Known hierarchical LMS child routes
+    if (
+      currentPath.startsWith("/lms/plant") ||
+      currentPath.startsWith("/lms/department") ||
+      currentPath.startsWith("/lms/subdepartment") ||
+      currentPath.startsWith("/lms/line") ||
+      currentPath.startsWith("/lms/machine") ||
+      currentPath.startsWith("/lms/operators") ||
+      currentPath.startsWith("/lms/operator/")
+    ) {
+      const plantItem = menuItems.find(
+        (item) => item.name === "Plant" || item.path === "/lms/plant"
+      );
+      if (plantItem) return plantItem.name;
+    }
+
+    if (currentPath.startsWith("/lms/user/")) {
+      const usersItem = menuItems.find(
+        (item) => item.name === "Users" || item.path === "/lms/users"
+      );
+      if (usersItem) return usersItem.name;
+    }
+
+    if (
+      currentPath.startsWith("/lms/l0") ||
+      currentPath.startsWith("/lms/l1") ||
+      currentPath.startsWith("/lms/paper")
+    ) {
+      const dojoItem = menuItems.find(
+        (item) =>
+          item.name === "DOJO Hiring" ||
+          item.path === "/lms/dojo-hiring" ||
+          item.path === "/lms"
+      );
+      if (dojoItem) return dojoItem.name;
+    }
+
+    // 4. Longest prefix match for any other nested routes (avoiding generic "/" or "/dashboard" matching sibling routes)
+    const prefixMatches = menuItems.filter((item) => {
+      if (!item.path) return false;
+      const cleanItemPath = item.path.replace(/\/+$/, "");
+      if (
+        cleanItemPath === "/" ||
+        cleanItemPath === "/dashboard" ||
+        cleanItemPath === "/lms"
+      ) {
+        return false;
+      }
+      return currentPath.startsWith(cleanItemPath + "/");
+    });
+    if (prefixMatches.length > 0) {
+      const bestMatch = prefixMatches.reduce((longest, current) =>
+        current.path.length > longest.path.length ? current : longest
+      );
+      return bestMatch.name;
+    }
+
+    // 5. If activeMenu matches an item in menuItems, use it
+    if (activeMenu && menuItems.some((item) => item.name === activeMenu)) {
+      return activeMenu;
+    }
+
+    // 6. Default fallback to 1st menu item
+    return menuItems[0]?.name || "";
+  }, [currentPath, menuItems, activeMenu]);
+
+  // Synchronize parent activeMenu state if it diverges from activeItemName
+  useEffect(() => {
+    if (activeItemName && setActiveMenu && activeMenu !== activeItemName) {
+      setActiveMenu(activeItemName);
+    }
+  }, [activeItemName, setActiveMenu, activeMenu]);
+
+  return (
+    <>
+      {/* Mobile Overlay */}
+      {mobileOpen && !collapsed && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          onClick={() => {
+            setCollapsed(true);
+            setMobileOpen(false);
+          }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`relative flex h-screen flex-col border-r border-[#e2edf2] bg-white transition-all duration-300 ${
+          collapsed ? "w-20" : "w-64"
+        }`}
+      >
+        {/* Sidebar Content */}
+        <div className="flex h-full flex-col">
+          {/* Header */}
+          <div
+            className={`flex h-16 shrink-0 items-center border-b border-[#e2edf2] ${collapsed ? "justify-center px-2" : "justify-between px-4"
+              }`}
+          >
+            {/* Logo */}
+            {!collapsed && (
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center">
+                  <img
+                    src={logo}
+                    alt="Uno Minda Logo"
+                    className="h-10 w-auto object-contain"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Collapse Button */}
+            <button
+              onClick={() => {
+                setCollapsed(!collapsed);
+
+                // Close mobile sidebar when collapsing
+                if (window.innerWidth < 1024) {
+                  setMobileOpen(false);
+                }
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e2edf2] bg-white p-2 text-[#64748b] transition-all hover:bg-[#e0f4fc] hover:text-[#20a8df] hover:border-[#20a8df]/40 shadow-xs"
+              title={collapsed ? "Expand" : "Collapse"}
+            >
+              {collapsed ? (
+                <ChevronsRight size={18} />
+              ) : (
+                <ChevronsLeft size={18} />
+              )}
+            </button>
+          </div>
+
+          {/* Portal Switch */}
+          <div className="px-3 pt-3">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className={`group relative flex w-full items-center rounded-2xl border border-[#e2edf2] bg-white/80 py-2.5 transition-all duration-200 hover:border-[#20a8df]/40 hover:bg-[#e0f4fc]/40 shadow-xs ${collapsed ? "justify-center" : "gap-3 px-3"
+                }`}
+              title="Uno Minda Dashboard"
+            >
+              {/* Portal Icon */}
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#0b7aa8] via-[#20a8df] to-[#38bdf8] text-white shadow-[0_0_12px_rgba(32,168,223,0.35)] ${collapsed ? "mx-auto" : ""
+                  }`}
+              >
+                <LayoutGrid size={18} />
+              </div>
+
+              {/* Portal Text */}
+              {!collapsed && (
+                <span className="whitespace-nowrap text-xs font-bold uppercase tracking-wider text-[#0f172a]">
+                  Dashboard Home
+                </span>
+              )}
+
+              {/* Tooltip when Collapsed */}
+              {collapsed && (
+                <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                  <div className="whitespace-nowrap rounded-xl bg-[#0f172a] px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+                    Home Portal
+                  </div>
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="mt-3 flex-1 space-y-1 overflow-y-auto px-3">
+            {menuItems.map((item) => {
+              const active = item.name === activeItemName;
+
+              return (
+                <div key={item.name} className="group relative">
+                  {/* Menu Button */}
+                  <button
+                    onClick={() => {
+                      if (setActiveMenu) {
+                        setActiveMenu(item.name);
+                      }
+
+                      if (item.path) {
+                        navigate(item.path);
+                      }
+
+                      // Collapse sidebar after selecting menu on mobile
+                      if (window.innerWidth < 1024) {
+                        setCollapsed(true);
+                        setMobileOpen(false);
+                      }
+                    }}
+                    className={`flex w-full items-center rounded-2xl py-2.5 transition-all duration-200 ${collapsed ? "justify-center" : "gap-3 px-3"
+                      } ${active
+                        ? "bg-[#e0f4fc] font-semibold text-[#0b7aa8] border border-[#20a8df]/30 shadow-xs"
+                        : "text-[#64748b] hover:bg-[#f0f9ff] hover:text-[#20a8df]"
+                      }`}
+                  >
+                    {/* Menu Icon */}
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200 ${active
+                        ? "bg-white text-[#20a8df] shadow-[0_0_8px_rgba(32,168,223,0.25)]"
+                        : "bg-[#f1f6f9] text-[#64748b] group-hover:bg-[#e0f4fc] group-hover:text-[#20a8df]"
+                        } ${collapsed ? "mx-auto" : ""}`}
+                    >
+                      {item.icon}
+                    </div>
+
+                    {/* Menu Name */}
+                    {!collapsed && (
+                      <span className="whitespace-nowrap text-sm">
+                        {item.name}
+                      </span>
+                    )}
+
+                    {/* Right Active Indicator Dot */}
+                    {!collapsed && active && (
+                      <span className="ml-auto h-2 w-2 rounded-full bg-[#20a8df] shadow-[0_0_8px_#20a8df]" />
+                    )}
+                  </button>
+
+                  {/* Tooltip when Collapsed */}
+                  {collapsed && (
+                    <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                      <div className="whitespace-nowrap rounded-xl bg-[#0f172a] px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+                        {item.name}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Bottom Card & Logout */}
+          <div className="mt-auto px-3 pb-4">
+            {!collapsed && (
+              <div className="mb-3 p-3 rounded-2xl bg-gradient-to-b from-[#f0f9ff] to-[#e0f4fc] border border-[#bae6fd] text-center shadow-xs">
+                <div className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-r from-[#0b7aa8] to-[#20a8df] text-white shadow-[0_0_10px_rgba(32,168,223,0.35)]">
+                  <Sparkles size={14} />
+                </div>
+                <p className="text-xs font-bold text-[#0f172a]">Uno Minda Pune</p>
+                <p className="mt-0.5 text-[10px] text-[#64748b]">Operations &amp; Analytics</p>
+              </div>
+            )}
+
+            <button
+              onClick={handleLogout}
+              className={`group relative flex w-full items-center rounded-2xl py-2.5 transition-all duration-200 ${collapsed ? "justify-center" : "gap-3 px-3"
+                } text-[#64748b] hover:bg-[#fff1f2] hover:text-[#fb7185]`}
+            >
+              {/* Logout Icon */}
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200 bg-[#f1f6f9] text-[#64748b] group-hover:bg-[#fff1f2] group-hover:text-[#fb7185] ${collapsed ? "mx-auto" : ""
+                  }`}
+              >
+                <LogOut size={18} />
+              </div>
+
+              {/* Logout Text */}
+              {!collapsed && (
+                <span className="whitespace-nowrap text-sm font-medium">
+                  Logout
+                </span>
+              )}
+
+              {/* Tooltip when Collapsed */}
+              {collapsed && (
+                <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                  <div className="whitespace-nowrap rounded-xl bg-[#0f172a] px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+                    Logout
+                  </div>
+                </div>
+              )}
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+export default Sidebar;

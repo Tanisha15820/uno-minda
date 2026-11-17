@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Total Manpower",
+    "value": "670",
+    "trend": "+4.2%",
+    "color": "blue"
+  },
+  {
+    "title": "Total Present",
+    "value": "592",
+    "trend": "+2.8%",
+    "color": "glowingBlue"
+  },
+  {
+    "title": "Attendance Rate",
+    "value": "88.4%",
+    "trend": "+1.5%",
+    "color": "blue"
+  },
+  {
+    "title": "DOJO Trainees",
+    "value": "48",
+    "trend": "+12%",
+    "color": "cyan"
+  }
+]
